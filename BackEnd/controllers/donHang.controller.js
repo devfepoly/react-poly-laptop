@@ -17,6 +17,17 @@ exports.getById = async (req, res) => {
     if (!donHang) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
     }
+
+    // Kiểm tra ownership: user chỉ được xem đơn hàng của mình, admin xem tất cả
+    if (req.user.vai_tro !== 1) { // Không phải admin
+      if (donHang.id_user !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Bạn không có quyền xem đơn hàng này'
+        });
+      }
+    }
+
     // Lấy chi tiết đơn hàng
     const chiTiet = await DonHang.getChiTiet(req.params.id);
     donHang.chi_tiet = chiTiet;
@@ -114,9 +125,19 @@ exports.delete = async (req, res) => {
 exports.getByUserId = async (req, res) => {
   try {
     // Sử dụng getByUserInfo để lấy cả đơn hàng có id_user và đơn hàng khách vãng lai có cùng email/sdt
-    const userId = req.params.userId;
+    const userId = parseInt(req.params.userId);
 
     console.log('=== Getting orders for userId:', userId);
+
+    // Kiểm tra ownership: user chỉ được xem đơn hàng của mình, admin xem tất cả
+    if (req.user.vai_tro !== 1) { // Không phải admin
+      if (req.user.id !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Bạn không có quyền xem đơn hàng của người dùng khác'
+        });
+      }
+    }
 
     // Lấy thông tin user để match với email/sdt
     const Users = require('../models/users.model');

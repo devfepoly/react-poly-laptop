@@ -17,6 +17,7 @@ const Compare = lazy(() => import('@pages/HomeTemplate/Compare'));
 const OrderHistory = lazy(() => import('@pages/HomeTemplate/OrderHistory'));
 const NotFound = lazy(() => import('@pages/HomeTemplate/NotFound'));
 const Auth = lazy(() => import('@pages/Auth'));
+const ForgotPassword = lazy(() => import('@pages/HomeTemplate/ForgotPassword'));
 
 // Admin pages
 const AdminDashboard = lazy(() => import('@pages/AdminTemplate/Dashboard'));
@@ -74,6 +75,14 @@ export default function AppRoutes({ isDark, toggleTheme }) {
                     element={
                         <GuestGuard>
                             <Auth />
+                        </GuestGuard>
+                    }
+                />
+                <Route
+                    path="/forgot-password"
+                    element={
+                        <GuestGuard>
+                            <ForgotPassword />
                         </GuestGuard>
                     }
                 />

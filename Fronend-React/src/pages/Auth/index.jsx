@@ -142,7 +142,7 @@ export default function Auth() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 className={`mt-1 block w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'
-                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
                                 placeholder="you@example.com"
                             />
                             {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
@@ -161,10 +161,22 @@ export default function Auth() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 className={`mt-1 block w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
                                 placeholder="••••••••"
                             />
                             {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+
+                            {/* Forgot Password - Only show in login mode */}
+                            {isLogin && (
+                                <div className="text-right">
+                                    <Link
+                                        to="/forgot-password"
+                                        className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                                    >
+                                        Quên mật khẩu?
+                                    </Link>
+                                </div>
+                            )}
                         </div>
 
                         {/* Register fields */}
@@ -182,7 +194,7 @@ export default function Auth() {
                                         value={formData.ho_ten}
                                         onChange={handleChange}
                                         className={`mt-1 block w-full px-3 py-2 border ${errors.ho_ten ? 'border-red-500' : 'border-gray-300'
-                                            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                                            } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
                                         placeholder="Nguyễn Văn A"
                                     />
                                     {errors.ho_ten && <p className="mt-1 text-sm text-red-500">{errors.ho_ten}</p>}
@@ -199,7 +211,7 @@ export default function Auth() {
                                         autoComplete="tel"
                                         value={formData.dien_thoai}
                                         onChange={handleChange}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         placeholder="0123456789"
                                     />
                                 </div>
@@ -215,7 +227,7 @@ export default function Auth() {
                                         autoComplete="street-address"
                                         value={formData.dia_chi}
                                         onChange={handleChange}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         placeholder="Hà Nội, Việt Nam"
                                     />
                                 </div>

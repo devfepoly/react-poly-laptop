@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authService } from './auth.service';
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -8,42 +9,76 @@ const api = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Tự động gắn token vào mỗi request
-api.interceptors.request.use(
-    (config) => {
-        try {
-            const tokenString = localStorage.getItem('token');
-            if (tokenString) {
-                // Token được lưu dưới dạng JSON, cần parse
-                const token = JSON.parse(tokenString);
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        } catch {
-            // Nếu token không parse được, thử lấy trực tiếp
-            const token = localStorage.getItem('token');
-            if (token && token !== 'undefined' && token !== 'null') {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+/**
+ * Request Interceptor - Tự động gắn JWT token vào header
+ * Lấy token từ localStorage và gắn vào Authorization header
+ */
+const handleRequestSuccess = (config) => {
+    try {
+        const tokenString = localStorage.getItem('token');
+        if (tokenString) {
+            // Token được lưu dưới dạng JSON, cần parse
+            const token = JSON.parse(tokenString);
+            config.headers.Authorization = `Bearer ${token}`;
         }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Xử lý lỗi response
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        // Chỉ log lỗi 401, không tự động redirect
-        // Để component tự xử lý việc redirect
-        if (error.response?.status === 401) {
-            console.warn('API 401 Error - Token invalid or expired:', error.config?.url);
-            // Không xóa localStorage ở đây vì có thể gây race condition
-            // Để AuthContext xử lý việc logout
+    } catch {
+        // Nếu token không parse được, thử lấy trực tiếp
+        const token = localStorage.getItem('token');
+        if (token && token !== 'undefined' && token !== 'null') {
+            config.headers.Authorization = `Bearer ${token}`;
         }
-        return Promise.reject(error);
     }
-);
+    return config;
+};
+//**8* */
+const handleRequestError = (error) => {
+    return Promise.reject(error);
+};
+
+/**
+ * Response Interceptor - Xử lý lỗi authentication/authorization
+ * 401 Unauthorized: Token không hợp lệ/hết hạn
+ * 403 Forbidden: Không có quyền truy cập
+ */
+const handleResponseSuccess = (response) => {
+    return response;
+};
+
+const handleResponseError = (error) => {
+    if (error.response?.status === 401) {
+        // Token không hợp lệ hoặc đã hết hạn
+        console.warn('🔒 401 Unauthorized - Token invalid or expired:', error.config?.url);
+
+        // Xóa token và user khỏi localStorage
+        authService.logout();
+
+        // Redirect về trang login nếu không ở trang login/register
+        if (!window.location.pathname.includes('/login') &&
+            !window.location.pathname.includes('/register') &&
+            !window.location.pathname.includes('/forgot-password')) {
+            window.location.href = '/login';
+        }
+    } else if (error.response?.status === 403) {
+        // User không có quyền truy cập resource này
+        console.warn('🚫 403 Forbidden - Insufficient permissions:', error.config?.url);
+
+        // Hiển thị thông báo cho user
+        if (typeof window !== 'undefined') {
+            alert('Bạn không có quyền thực hiện thao tác này!');
+        }
+
+        // Redirect về trang chủ nếu đang ở trang admin
+        if (window.location.pathname.includes('/admin')) {
+            window.location.href = '/';
+        }
+    }
+
+    return Promise.reject(error);
+};
+
+// Áp dụng interceptors
+api.interceptors.request.use(handleRequestSuccess, handleRequestError);
+api.interceptors.response.use(handleResponseSuccess, handleResponseError);
 
 // ===== LOẠI SẢN PHẨM API =====
 export const loaiAPI = {
@@ -112,6 +147,15 @@ export const uploadAPI = {
     uploadSingle: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
+        // Ensure token is included in multipart body as well for servers that
+        // prefer/require token in the payload (some middlewares/readers).
+        try {
+            const token = authService.getToken();
+            if (token) formData.append('token', token);
+        } catch {
+            // ignore
+        }
+
         return api.post('/upload/single', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -119,6 +163,14 @@ export const uploadAPI = {
     uploadMultiple: async (files) => {
         const formData = new FormData();
         files.forEach(file => formData.append('images', file));
+        // Append token to form data as well
+        try {
+            const token = authService.getToken();
+            if (token) formData.append('token', token);
+        } catch {
+            // ignore
+        }
+
         return api.post('/upload/multiple', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });

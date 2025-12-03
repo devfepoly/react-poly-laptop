@@ -2,18 +2,18 @@ const express = require('express');
 const router = express.Router();
 const uploadController = require('../controllers/upload.controller');
 const { uploadSingle, uploadMultiple } = require('../middleware/upload.middleware');
-const { verifyToken } = require('../middleware/auth.middleware');
+const { verifyToken, authorizeRoles } = require('../middleware/auth.middleware');
 
-// Upload single image (cần authentication)
-router.post('/single', verifyToken, uploadSingle, uploadController.uploadSingle);
+// Upload single image - chỉ admin
+router.post('/single', verifyToken, authorizeRoles('admin'), uploadSingle, uploadController.uploadSingle);
 
-// Upload multiple images (cần authentication)
-router.post('/multiple', verifyToken, uploadMultiple, uploadController.uploadMultiple);
+// Upload multiple images - chỉ admin
+router.post('/multiple', verifyToken, authorizeRoles('admin'), uploadMultiple, uploadController.uploadMultiple);
 
-// Delete image (cần authentication)
-router.delete('/:filename', verifyToken, uploadController.deleteImage);
+// Delete image - chỉ admin
+router.delete('/:filename', verifyToken, authorizeRoles('admin'), uploadController.deleteImage);
 
-// Get all uploaded images (cần authentication)
-router.get('/', verifyToken, uploadController.getAllImages);
+// Get all uploaded images - chỉ admin
+router.get('/', verifyToken, authorizeRoles('admin'), uploadController.getAllImages);
 
 module.exports = router;
